@@ -3,40 +3,61 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SmartCheck Pro</title>
+<title>SmartCheck by Smartech</title>
 
 <!-- IMPORTATION DU SCANNEUR -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
 :root {
-    --primary: #d4af37; /* Couleur Or/Mariage élégante */
+    --primary: #2ec4b6; /* Un vert émeraude/turquoise très moderne */
+    --primary-dark: #0f9f90;
     --success: #2ecc71;
     --danger: #e74c3c;
     --dark: #2c3e50;
+    --bg: #f4f9f8; /* Fond blanc teinté de vert très léger */
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #f9f6f0; /* Blanc cassé chaleureux style mariage */
+    background: var(--bg);
     margin: 0;
     padding: 15px;
     color: var(--dark);
-    -webkit-user-select: none; /* Look appli mobile native */
+    -webkit-user-select: none;
+}
+
+/* En-tête de l'application */
+.header-container {
+    margin-top: 15px;
+    margin-bottom: 25px;
 }
 
 h1 {
-    color: var(--primary);
+    color: var(--dark);
     font-size: 28px;
-    margin-top: 10px;
-    font-weight: 600;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+h1 span {
+    color: var(--primary); /* Met le "Check" en vert */
+}
+
+.brand-subtitle {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    margin-top: 2px;
 }
 
 .sub-title {
     font-size: 14px;
     color: #7f8c8d;
-    margin-top: -10px;
-    margin-bottom: 20px;
+    margin-top: 5px;
 }
 
 .card {
@@ -45,7 +66,7 @@ h1 {
     margin: 15px auto;
     max-width: 450px;
     border-radius: 20px;
-    box-shadow: 0 4px 15px rgba(0,0,0,.06);
+    box-shadow: 0 4px 20px rgba(46, 196, 182, 0.08);
     box-sizing: border-box;
 }
 
@@ -60,7 +81,7 @@ h1 {
 }
 
 .stat-number {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: bold;
     color: var(--primary);
 }
@@ -80,8 +101,12 @@ button.btn-main {
     font-weight: bold;
     border-radius: 14px;
     cursor: pointer;
-    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
-    transition: transform 0.1s;
+    box-shadow: 0 4px 12px rgba(46, 196, 182, 0.25);
+    transition: background 0.2s, transform 0.1s;
+}
+
+button.btn-main:hover {
+    background: var(--primary-dark);
 }
 
 button.btn-main:active {
@@ -96,7 +121,6 @@ button.btn-main:active {
     border: none !important;
 }
 
-/* Style de la liste des invités scannés */
 .guest-list {
     text-align: left;
     max-height: 250px;
@@ -106,7 +130,7 @@ button.btn-main:active {
 
 .guest-item {
     padding: 12px 15px;
-    border-bottom: 1px solid #f1f1f1;
+    border-bottom: 1px solid #f1f9f8;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -119,7 +143,7 @@ button.btn-main:active {
 }
 
 .badge {
-    background: rgba(46, 204, 113, 0.15);
+    background: rgba(46, 204, 113, 0.12);
     color: var(--success);
     padding: 4px 8px;
     border-radius: 6px;
@@ -137,7 +161,6 @@ button.btn-main:active {
     text-decoration: underline;
 }
 
-/* Écran d'alerte plein écran pour le scanneur */
 #scan-overlay {
     display: none;
     position: fixed;
@@ -155,15 +178,19 @@ button.btn-main:active {
 </head>
 <body>
 
-<h1>✨ SmartCheck</h1>
-<div class="sub-title">Gestion des Entrées Mariage</div>
+<!-- EN-TÊTE SMARTCHECK BY SMARTECH -->
+<div class="header-container">
+    <div class="brand-subtitle">By Smartech</div>
+    <h1>Smart<span>Check</span></h1>
+    <div class="sub-title">Gestion des Entrées Mariage</div>
+</div>
 
-<!-- CARTE DU SCANNEUR -->
+<!-- CARTE DU SNEUR -->
 <div class="card">
     <div class="stats-grid">
         <div class="stat-box">
             <div id="count-total" class="stat-number">0</div>
-            <div class="stat-label">Scannés</div>
+            <div class="stat-label">Invités Scannés</div>
         </div>
     </div>
     
@@ -190,7 +217,6 @@ button.btn-main:active {
 let html5QrcodeScanner;
 let invitesScannes = JSON.parse(localStorage.getItem('wedding_guests')) || [];
 
-// Au chargement, on affiche les invités déjà sauvegardés
 MettreAJourAffichage();
 
 function demarrerScan() {
@@ -205,21 +231,15 @@ function demarrerScan() {
 }
 
 function onScanSuccess(decodedText) {
-    // Nettoyage du texte (au cas où c'est un lien complet)
     let nomInvite = decodedText.trim();
-    
-    // Vérification des doublons
     let existeDeja = invitesScannes.some(guest => guest.nom.toLowerCase() === nomInvite.toLowerCase());
     
     if (existeDeja) {
-        // ALERTE ROUGE : Déjà scanné !
         declencherFlash('Déjà Scanné ! ⚠️', 'var(--danger)');
     } else {
-        // VALIDATION VERTE : Bienvenue !
         let maintenant = new Date();
         let heure = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
         
-        // Ajouter à la liste
         invitesScannes.unshift({ nom: nomInvite, heure: heure });
         localStorage.setItem('wedding_guests', JSON.stringify(invitesScannes));
         
@@ -227,16 +247,13 @@ function onScanSuccess(decodedText) {
         MettreAJourAffichage();
     }
     
-    // Redémarrage automatique du scanneur après 2 secondes pour pouvoir enchaîner les invités
     html5QrcodeScanner.clear();
     setTimeout(() => {
         demarrerScan();
     }, 2000);
 }
 
-function onScanFailure(error) {
-    // On ignore les échecs de lecture intermédiaires
-}
+function onScanFailure(error) {}
 
 function declencherFlash(message, couleur) {
     let overlay = document.getElementById('scan-overlay');
@@ -244,10 +261,8 @@ function declencherFlash(message, couleur) {
     overlay.innerHTML = message;
     overlay.style.display = 'flex';
     
-    // Faire vibrer le téléphone si disponible (effet appli native)
     if (navigator.vibrate) navigator.vibrate([200]);
 
-    // Disparition automatique au bout de 2 secondes
     setTimeout(() => {
         overlay.style.display = 'none';
     }, 2000);
@@ -279,7 +294,7 @@ function MettreAJourAffichage() {
 }
 
 function viderListe() {
-    if (confirm("Voulez-vous vraiment vider la liste des invités présents pour ce mariage ?")) {
+    if (confirm("Voulez-vous vraiment vider la liste des invités présents ?")) {
         invitesScannes = [];
         localStorage.removeItem('wedding_guests');
         MettreAJourAffichage();
