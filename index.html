@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SmartCheck</title>
 
+<!-- IMPORTATION DE LA BIBLIOTHÈQUE DE SCAN (Html5-Qrcode) -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
 <style>
 body{
 font-family:Arial,sans-serif;
@@ -35,10 +38,20 @@ padding:15px 25px;
 font-size:18px;
 border-radius:10px;
 cursor:pointer;
+margin-bottom: 10px;
 }
 
 button:hover{
 background:#0056b3;
+}
+
+/* Zone où la caméra va s'afficher */
+#reader {
+width: 100%;
+max-width: 350px;
+margin: 15px auto;
+border-radius: 10px;
+overflow: hidden;
 }
 </style>
 
@@ -51,15 +64,57 @@ background:#0056b3;
 <div class="card">
 <h2>Scanner un QR Code</h2>
 
-<button>📷 Scanner</button>
+<!-- ÉTAPE 1 : On a ajouté un "id" et un "onclick" au bouton pour déclencher le scan -->
+<button id="start-btn" onclick="demarrerScan()">📷 Scanner</button>
 
+<!-- ÉTAPE 2 : Zone invisible au départ qui affichera la caméra -->
+<div id="reader"></div>
 </div>
 
 <div class="card">
 <h2>Invités</h2>
-
-<p>Aucun invité enregistré.</p>
+<!-- ÉTAPE 3 : Une zone pour afficher le résultat du scan -->
+<p id="resultat">Aucun invité enregistré.</p>
 </div>
 
+<!-- ==========================================
+     LE SCRIPT JAVASCRIPT (Le moteur du scan)
+     ========================================== -->
+<script>
+let html5QrcodeScanner;
+
+function demarrerScan() {
+    // On cache le bouton "Scanner" pour laisser la place à la caméra
+    document.getElementById('start-btn').style.display = 'none';
+
+    // On initialise le scanner dans la zone #reader
+    html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", 
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        /* verbose= */ false
+    );
+
+    // On lance la caméra
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+}
+
+// Que fait-on quand un QR code est détecté ?
+function onScanSuccess(decodedText, decodedResult) {
+    // On affiche le texte du QR code dans la zone invités
+    document.getElementById('resultat').innerHTML = `<strong>Invité détecté :</strong> ${decodedText}`;
+    
+    // On arrête la caméra après un scan réussi
+    html5QrcodeScanner.clear();
+    
+    // On réaffiche le bouton scanner
+    document.getElementById('start-btn').style.display = 'inline-block';
+}
+
+// Optionnel : Que fait-on si le scan échoue (erreur de lecture en cours de route)
+function onScanFailure(error) {
+    // On ne fait rien pour éviter de spammer des messages d'erreur à chaque milliseconde
+}
+</script>
+
 </body>
-  </html>
+</html>
