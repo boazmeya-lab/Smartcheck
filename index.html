@@ -2,117 +2,288 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartCheck</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SmartCheck Pro</title>
 
-<!-- IMPORTATION DE LA BIBLIOTHÈQUE DE SCAN (Html5-Qrcode) -->
+<!-- IMPORTATION DU SCANNEUR -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
 <style>
-body{
-font-family:Arial,sans-serif;
-background:#f5f5f5;
-margin:0;
-padding:20px;
-text-align:center;
+:root {
+    --primary: #d4af37; /* Couleur Or/Mariage élégante */
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --dark: #2c3e50;
 }
 
-h1{
-color:#007bff;
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f9f6f0; /* Blanc cassé chaleureux style mariage */
+    margin: 0;
+    padding: 15px;
+    color: var(--dark);
+    -webkit-user-select: none; /* Look appli mobile native */
 }
 
-.card{
-background:white;
-padding:20px;
-margin:20px auto;
-max-width:400px;
-border-radius:15px;
-box-shadow:0 2px 10px rgba(0,0,0,.15);
+h1 {
+    color: var(--primary);
+    font-size: 28px;
+    margin-top: 10px;
+    font-weight: 600;
 }
 
-button{
-background:#007bff;
-color:white;
-border:none;
-padding:15px 25px;
-font-size:18px;
-border-radius:10px;
-cursor:pointer;
-margin-bottom: 10px;
+.sub-title {
+    font-size: 14px;
+    color: #7f8c8d;
+    margin-top: -10px;
+    margin-bottom: 20px;
 }
 
-button:hover{
-background:#0056b3;
+.card {
+    background: white;
+    padding: 20px;
+    margin: 15px auto;
+    max-width: 450px;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,.06);
+    box-sizing: border-box;
 }
 
-/* Zone où la caméra va s'afficher */
+.stats-grid {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+}
+
+.stat-box {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #95a5a6;
+}
+
+button.btn-main {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(212, 175, 55, 0.3);
+    transition: transform 0.1s;
+}
+
+button.btn-main:active {
+    transform: scale(0.98);
+}
+
 #reader {
-width: 100%;
-max-width: 350px;
-margin: 15px auto;
-border-radius: 10px;
-overflow: hidden;
+    width: 100%;
+    margin: 15px auto 0 auto;
+    border-radius: 14px;
+    overflow: hidden;
+    border: none !important;
+}
+
+/* Style de la liste des invités scannés */
+.guest-list {
+    text-align: left;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.guest-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f1f1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+}
+
+.guest-time {
+    font-size: 11px;
+    color: #bdc3c7;
+}
+
+.badge {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--success);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.btn-clear {
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 15px;
+    text-decoration: underline;
+}
+
+/* Écran d'alerte plein écran pour le scanneur */
+#scan-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
 }
 </style>
-
 </head>
-
 <body>
 
-<h1>🎉 SmartCheck</h1>
+<h1>✨ SmartCheck</h1>
+<div class="sub-title">Gestion des Entrées Mariage</div>
 
+<!-- CARTE DU SCANNEUR -->
 <div class="card">
-<h2>Scanner un QR Code</h2>
-
-<!-- ÉTAPE 1 : On a ajouté un "id" et un "onclick" au bouton pour déclencher le scan -->
-<button id="start-btn" onclick="demarrerScan()">📷 Scanner</button>
-
-<!-- ÉTAPE 2 : Zone invisible au départ qui affichera la caméra -->
-<div id="reader"></div>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div id="count-total" class="stat-number">0</div>
+            <div class="stat-label">Scannés</div>
+        </div>
+    </div>
+    
+    <button id="start-btn" class="btn-main" onclick="demarrerScan()">📷 Ouvrir le Scanneur</button>
+    <div id="reader"></div>
 </div>
 
+<!-- CARTE DE L'HISTORIQUE -->
 <div class="card">
-<h2>Invités</h2>
-<!-- ÉTAPE 3 : Une zone pour afficher le résultat du scan -->
-<p id="resultat">Aucun invité enregistré.</p>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 18px;">Derniers Invités Validés</h3>
+        <button class="btn-clear" onclick="viderListe()">Réinitialiser</button>
+    </div>
+    
+    <div id="liste-invites" class="guest-list">
+        <!-- Les invités apparaîtront ici -->
+    </div>
 </div>
 
-<!-- ==========================================
-     LE SCRIPT JAVASCRIPT (Le moteur du scan)
-     ========================================== -->
+<!-- ÉCRAN FLASH DE VALIDATION (VERT OU ROUGE) -->
+<div id="scan-overlay"></div>
+
 <script>
 let html5QrcodeScanner;
+let invitesScannes = JSON.parse(localStorage.getItem('wedding_guests')) || [];
+
+// Au chargement, on affiche les invités déjà sauvegardés
+MettreAJourAffichage();
 
 function demarrerScan() {
-    // On cache le bouton "Scanner" pour laisser la place à la caméra
     document.getElementById('start-btn').style.display = 'none';
 
-    // On initialise le scanner dans la zone #reader
     html5QrcodeScanner = new Html5QrcodeScanner(
         "reader", 
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        /* verbose= */ false
+        { fps: 15, qrbox: { width: 230, height: 230 } },
+        false
     );
-
-    // On lance la caméra
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 }
 
-// Que fait-on quand un QR code est détecté ?
-function onScanSuccess(decodedText, decodedResult) {
-    // On affiche le texte du QR code dans la zone invités
-    document.getElementById('resultat').innerHTML = `<strong>Invité détecté :</strong> ${decodedText}`;
+function onScanSuccess(decodedText) {
+    // Nettoyage du texte (au cas où c'est un lien complet)
+    let nomInvite = decodedText.trim();
     
-    // On arrête la caméra après un scan réussi
+    // Vérification des doublons
+    let existeDeja = invitesScannes.some(guest => guest.nom.toLowerCase() === nomInvite.toLowerCase());
+    
+    if (existeDeja) {
+        // ALERTE ROUGE : Déjà scanné !
+        declencherFlash('Déjà Scanné ! ⚠️', 'var(--danger)');
+    } else {
+        // VALIDATION VERTE : Bienvenue !
+        let maintenant = new Date();
+        let heure = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
+        
+        // Ajouter à la liste
+        invitesScannes.unshift({ nom: nomInvite, heure: heure });
+        localStorage.setItem('wedding_guests', JSON.stringify(invitesScannes));
+        
+        declencherFlash('Accès Autorisé ✅<br><span style="font-size:18px;font-weight:normal;">' + nomInvite + '</span>', 'var(--success)');
+        MettreAJourAffichage();
+    }
+    
+    // Redémarrage automatique du scanneur après 2 secondes pour pouvoir enchaîner les invités
     html5QrcodeScanner.clear();
-    
-    // On réaffiche le bouton scanner
-    document.getElementById('start-btn').style.display = 'inline-block';
+    setTimeout(() => {
+        demarrerScan();
+    }, 2000);
 }
 
-// Optionnel : Que fait-on si le scan échoue (erreur de lecture en cours de route)
 function onScanFailure(error) {
-    // On ne fait rien pour éviter de spammer des messages d'erreur à chaque milliseconde
+    // On ignore les échecs de lecture intermédiaires
+}
+
+function declencherFlash(message, couleur) {
+    let overlay = document.getElementById('scan-overlay');
+    overlay.style.backgroundColor = couleur;
+    overlay.innerHTML = message;
+    overlay.style.display = 'flex';
+    
+    // Faire vibrer le téléphone si disponible (effet appli native)
+    if (navigator.vibrate) navigator.vibrate([200]);
+
+    // Disparition automatique au bout de 2 secondes
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 2000);
+}
+
+function MettreAJourAffichage() {
+    let listeDiv = document.getElementById('liste-invites');
+    let compteurDiv = document.getElementById('count-total');
+    
+    compteurDiv.innerText = invitesScannes.length;
+    
+    if (invitesScannes.length === 0) {
+        listeDiv.innerHTML = '<p style="color:#bdc3c7; text-align:center; margin-top:20px;">Aucun invité enregistré pour le moment.</p>';
+        return;
+    }
+    
+    listeDiv.innerHTML = '';
+    invitesScannes.forEach(guest => {
+        listeDiv.innerHTML += `
+            <div class="guest-item">
+                <div>
+                    <strong>${guest.nom}</strong><br>
+                    <span class="guest-time">Scanné à ${guest.heure}</span>
+                </div>
+                <span class="badge">Présent</span>
+            </div>
+        `;
+    });
+}
+
+function viderListe() {
+    if (confirm("Voulez-vous vraiment vider la liste des invités présents pour ce mariage ?")) {
+        invitesScannes = [];
+        localStorage.removeItem('wedding_guests');
+        MettreAJourAffichage();
+    }
 }
 </script>
 
