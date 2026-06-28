@@ -11,32 +11,36 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-<!-- IMPORTATION DU SCANNEUR -->
+<!-- IMPORTATION DU SCANNEUR ET DES ICONES -->
 <script src="https://unpkg.com/html5-qrcode"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 :root {
-    --primary: #2ec4b6; /* Un vert émeraude/turquoise très moderne */
+    --primary: #2ec4b6;
     --primary-dark: #0f9f90;
     --success: #2ecc71;
     --danger: #e74c3c;
+    --warning: #f1c40f;
     --dark: #2c3e50;
-    --bg: #f4f9f8; /* Fond blanc teinté de vert très léger */
+    --bg: #f4f9f8;
+    --card-shadow: 0 4px 20px rgba(46, 196, 182, 0.08);
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: var(--bg);
     margin: 0;
-    padding: 15px;
+    padding: 15px 15px 80px 15px; /* Padding bottom pour la navbar */
     color: var(--dark);
     -webkit-user-select: none;
 }
 
-/* En-tête de l'application */
+/* En-tête */
 .header-container {
     margin-top: 15px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
+    text-align: center;
 }
 
 h1 {
@@ -48,7 +52,7 @@ h1 {
 }
 
 h1 span {
-    color: var(--primary); /* Met le "Check" en vert */
+    color: var(--primary);
 }
 
 .brand-subtitle {
@@ -60,76 +64,114 @@ h1 span {
     margin-top: 2px;
 }
 
-.sub-title {
-    font-size: 14px;
-    color: #7f8c8d;
-    margin-top: 5px;
+/* Vues / Onglets */
+.app-view {
+    display: none;
+    max-width: 480px;
+    margin: 0 auto;
 }
 
+.app-view.active {
+    display: block;
+}
+
+/* Cartes */
 .card {
     background: white;
     padding: 20px;
     margin: 15px auto;
-    max-width: 450px;
     border-radius: 20px;
-    box-shadow: 0 4px 20px rgba(46, 196, 182, 0.08);
+    box-shadow: var(--card-shadow);
     box-sizing: border-box;
 }
 
-.stats-grid {
+/* Barre de Navigation Basse */
+.nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
     display: flex;
     justify-content: space-around;
-    margin-bottom: 10px;
+    padding: 10px 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+    z-index: 999;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: 600;
+    width: 25%;
+}
+
+.nav-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.nav-item.active {
+    color: var(--primary);
+}
+
+/* Statistiques Avancées */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
 }
 
 .stat-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 15px;
     text-align: center;
+    box-shadow: var(--card-shadow);
+    border-left: 4px solid var(--primary);
 }
 
+.stat-box.success { border-left-color: var(--success); }
+.stat-box.warning { border-left-color: var(--warning); }
+
 .stat-number {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: bold;
-    color: var(--primary);
+    color: var(--dark);
 }
 
 .stat-label {
     font-size: 12px;
-    color: #95a5a6;
+    color: #7f8c8d;
+    margin-top: 5px;
 }
 
-button.btn-main {
-    background: var(--primary);
-    color: white;
-    border: none;
+/* Formulaires et Inputs */
+.search-box, .input-field {
     width: 100%;
-    padding: 16px;
-    font-size: 18px;
-    font-weight: bold;
-    border-radius: 14px;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(46, 196, 182, 0.25);
-    transition: background 0.2s, transform 0.1s;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
 }
 
-button.btn-main:hover {
-    background: var(--primary-dark);
+.search-box:focus, .input-field:focus {
+    border-color: var(--primary);
 }
 
-button.btn-main:active {
-    transform: scale(0.98);
-}
-
-#reader {
-    width: 100%;
-    margin: 15px auto 0 auto;
-    border-radius: 14px;
-    overflow: hidden;
-    border: none !important;
-}
-
+/* Listes d'invités */
 .guest-list {
-    text-align: left;
-    max-height: 250px;
+    max-height: 400px;
     overflow-y: auto;
     margin-top: 15px;
 }
@@ -143,35 +185,62 @@ button.btn-main:active {
     font-size: 15px;
 }
 
+.guest-info strong {
+    display: block;
+    color: var(--dark);
+}
+
 .guest-time {
     font-size: 11px;
     color: #bdc3c7;
 }
 
+/* Badges */
 .badge {
-    background: rgba(46, 204, 113, 0.12);
-    color: var(--success);
     padding: 4px 8px;
     border-radius: 6px;
     font-size: 12px;
     font-weight: bold;
 }
 
-.btn-clear {
-    background: none;
+.badge.present { background: rgba(46, 204, 113, 0.15); color: var(--success); }
+.badge.absent { background: rgba(148, 163, 184, 0.15); color: #64748b; }
+
+/* Boutons */
+button.btn-main {
+    background: var(--primary);
+    color: white;
     border: none;
-    color: var(--danger);
-    font-size: 13px;
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 14px;
     cursor: pointer;
-    margin-top: 15px;
-    text-decoration: underline;
+    box-shadow: 0 4px 12px rgba(46, 196, 182, 0.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
+button.btn-main:hover { background: var(--primary-dark); }
+button.btn-secondary {
+    background: #e2e8f0;
+    color: var(--dark);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Overlay de validation */
 #scan-overlay {
     display: none;
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    z-index: 9999;
+    z-index: 10000;
     justify-content: center;
     align-items: center;
     color: white;
@@ -184,82 +253,294 @@ button.btn-main:active {
 </head>
 <body>
 
-<!-- EN-TÊTE SMARTCHECK BY SMARTECH -->
+<!-- EN-TÊTE GLOBAL -->
 <div class="header-container">
     <div class="brand-subtitle">By Smartech</div>
     <h1>Smart<span>Check</span></h1>
-    <div class="sub-title">Gestion des Entrées Mariage</div>
 </div>
 
-<!-- CARTE DU SCANNEUR -->
-<div class="card">
-    <div class="stats-grid">
-        <div class="stat-box">
-            <div id="count-total" class="stat-number">0</div>
-            <div class="stat-label">Invités Scannés</div>
+<!-- ================= VUE : ACCUEIL ================= -->
+<div id="view-home" class="app-view active">
+    <div class="card">
+        <h3><i class="fa-solid to fa-chart-pie"></i> Tableau de bord</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div id="stat-total" class="stat-number">0</div>
+                <div class="stat-label">Total Invités</div>
+            </div>
+            <div class="stat-box success">
+                <div id="stat-present" class="stat-number">0</div>
+                <div class="stat-label">Présents</div>
+            </div>
+            <div class="stat-box warning">
+                <div id="stat-absent" class="stat-number">0</div>
+                <div class="stat-label">Absents</div>
+            </div>
+            <div class="stat-box">
+                <div id="stat-ratio" class="stat-number">0%</div>
+                <div class="stat-label">Taux d'accès</div>
+            </div>
+        </div>
+        <button class="btn-main" onclick="switchView('scanner')">
+            <i class="fa-solid fa-qrcode"></i> Lancer un Scan
+        </button>
+    </div>
+</div>
+
+<!-- ================= VUE : SCANNER ================= -->
+<div id="view-scanner" class="app-view">
+    <div class="card">
+        <button id="start-btn" class="btn-main" onclick="demarrerScan()">📷 Ouvrir le Scanneur</button>
+        <div id="reader"></div>
+    </div>
+</div>
+
+<!-- ================= VUE : INVITÉS ================= -->
+<div id="view-guests" class="app-view">
+    <div class="card">
+        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <input type="text" id="search-input" class="search-box" placeholder="Rechercher un invité..." oninput="filtrerInvites()">
+            <button class="btn-secondary" onclick="synchroniserDonnees()"><i class="fa-solid fa-sync"></i></button>
+        </div>
+        
+        <div id="liste-invites" class="guest-list">
+            <!-- Injecté dynamiquement par JS -->
         </div>
     </div>
-    
-    <button id="start-btn" class="btn-main" onclick="demarrerScan()">📷 Ouvrir le Scanneur</button>
-    <div id="reader"></div>
 </div>
 
-<!-- CARTE DE L'HISTORIQUE -->
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin: 0; font-size: 18px;">Derniers Invités Validés</h3>
-        <button class="btn-clear" onclick="viderListe()">Réinitialiser</button>
-    </div>
-    
-    <div id="liste-invites" class="guest-list">
-        <!-- Les invités apparaîtront ici -->
+<!-- ================= VUE : PARAMÈTRES ================= -->
+<div id="view-settings" class="app-view">
+    <div class="card">
+        <h3><i class="fa-solid fa-gear"></i> Configuration webhook n8n</h3>
+        <p style="font-size:13px; color:#7f8c8d;">Entrez l'URL de votre Webhook n8n connecté à Google Sheets pour valider en temps réel.</p>
+        
+        <input type="url" id="webhook-url" class="input-field" placeholder="https://primary-production.up.railway.app/webhook/..." style="margin-bottom: 15px;">
+        
+        <button class="btn-main" onclick="sauvegarderParametres()" style="margin-bottom:10px;">
+            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder la configuration
+        </button>
+        <button class="btn-secondary" onclick="testerConnexion()" style="width:100%;">
+            <i class="fa-solid fa-wifi"></i> Tester la connexion
+        </button>
+        
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        <button class="btn-secondary" onclick="reinitialiserLocale()" style="width:100%; color: var(--danger);">
+            <i class="fa-solid fa-trash-can"></i> Réinitialiser le cache local
+        </button>
     </div>
 </div>
 
-<!-- ÉCRAN FLASH DE VALIDATION (VERT OU ROUGE) -->
+<!-- BARRE DE NAVIGATION FIXE -->
+<div class="nav-bar">
+    <button class="nav-item active" onclick="switchView('home', this)"><i class="fa-solid fa-house"></i>Accueil</button>
+    <button class="nav-item" onclick="switchView('scanner', this)"><i class="fa-solid fa-qrcode"></i>Scanner</button>
+    <button class="nav-item" onclick="switchView('guests', this)"><i class="fa-solid fa-users"></i>Invités</button>
+    <button class="nav-item" onclick="switchView('settings', this)"><i class="fa-solid fa-gear"></i>Paramètres</button>
+</div>
+
+<!-- ÉCRAN FLASH DE VALIDATION -->
 <div id="scan-overlay"></div>
 
 <script>
 let html5QrcodeScanner;
-let invitesScannes = JSON.parse(localStorage.getItem('wedding_guests')) || [];
+let BaseDonneesInvites = JSON.parse(localStorage.getItem('smartcheck_db')) || [];
+let WebhookUrl = localStorage.getItem('smartcheck_webhook') || '';
 
+// Initialisation au chargement
+document.getElementById('webhook-url').value = WebhookUrl;
 MettreAJourAffichage();
 
+// --- SYSTEME DE NAVIGATION ---
+function switchView(viewId, element) {
+    // Gestion des classes actives sur les vues
+    document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
+    document.getElementById(`view-${viewId}`).classList.add('active');
+    
+    // Gestion des classes actives sur la navbar
+    if(element) {
+        document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+        element.classList.add('active');
+    }
+
+    // Arrêt automatique de la caméra si on quitte le scanner
+    if (viewId !== 'scanner' && html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(err => console.log(err));
+        document.getElementById('start-btn').style.display = 'flex';
+    }
+}
+
+// --- SCANNEUR ---
 function demarrerScan() {
     document.getElementById('start-btn').style.display = 'none';
-
-    html5QrcodeScanner = new Html5QrcodeScanner(
-        "reader", 
-        { fps: 15, qrbox: { width: 230, height: 230 } },
-        false
-    );
+    html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: { width: 250, height: 250 } }, false);
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 }
 
 function onScanSuccess(decodedText) {
     let nomInvite = decodedText.trim();
-    let existeDeja = invitesScannes.some(guest => guest.nom.toLowerCase() === nomInvite.toLowerCase());
     
-    if (existeDeja) {
-        declencherFlash('Déjà Scanné ! ⚠️', 'var(--danger)');
+    // Arrêt immédiat pour traitement informatique du scan actuel
+    html5QrcodeScanner.clear().catch(err => console.log(err));
+    
+    // Recherche de l'invité localement
+    let invite = BaseDonneesInvites.find(g => g.nom.toLowerCase() === nomInvite.toLowerCase());
+    
+    if (invite) {
+        if (invite.statut === 'Présent') {
+            declencherFlash('Déjà Scanné ! ⚠️<br><span style="font-size:16px;">Présent depuis '+invite.heure+'</span>', 'var(--danger)');
+            relancerScanneurApresDelai();
+        } else {
+            validerEntree(invite);
+        }
     } else {
-        let maintenant = new Date();
-        let heure = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
-        
-        invitesScannes.unshift({ nom: nomInvite, heure: heure });
-        localStorage.setItem('wedding_guests', JSON.stringify(invitesScannes));
-        
-        declencherFlash('Accès Autorisé ✅<br><span style="font-size:18px;font-weight:normal;">' + nomInvite + '</span>', 'var(--success)');
-        MettreAJourAffichage();
+        // Optionnel : Si l'invité n'est pas trouvé dans la base importée
+        let nouvelInvite = { nom: nomInvite, statut: 'Absent', heure: '' };
+        validerEntree(nouvelInvite, true);
     }
-    
-    html5QrcodeScanner.clear();
-    setTimeout(() => {
-        demarrerScan();
-    }, 2000);
 }
 
 function onScanFailure(error) {}
+
+// --- INTERACTION WEBHOOK n8n & LOCAL ---
+async function validerEntree(invite, estNouveau = false) {
+    let maintenant = new Date();
+    let heureActuelle = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
+    
+    // Mise à jour locale immédiate (Optimistic UI)
+    if (estNouveau) {
+        invite.statut = 'Présent';
+        invite.heure = heureActuelle;
+        BaseDonneesInvites.unshift(invite);
+    } else {
+        invite.statut = 'Présent';
+        invite.heure = heureActuelle;
+    }
+    
+    sauvegarderLocalement();
+    MettreAJourAffichage();
+    
+    declencherFlash('Accès Autorisé ✅<br><span style="font-size:18px;font-weight:normal;">' + invite.nom + '</span>', 'var(--success)');
+
+    // Envoi asynchrone vers n8n (Google Sheets)
+    if (WebhookUrl) {
+        try {
+            await fetch(WebhookUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'checkin', nom: invite.nom, heure: heureActuelle })
+            });
+        } catch (e) {
+            console.error("Échec de synchronisation en ligne du scan, stocké localement.", e);
+        }
+    }
+    
+    relancerScanneurApresDelai();
+}
+
+function relancerScanneurApresDelai() {
+    setTimeout(() => {
+        if (document.getElementById('view-scanner').classList.contains('active')) {
+            demarrerScan();
+        }
+    }, 2500);
+}
+
+// --- SYNCHRONISATION COMPLETE DEPUIS GOOGLE SHEETS VIA n8n ---
+async function synchroniserDonnees() {
+    if (!WebhookUrl) {
+        alert("Veuillez d'abord configurer l'URL de votre Webhook dans les Paramètres.");
+        return;
+    }
+    
+    try {
+        let response = await fetch(`${WebhookUrl}?action=getGuests`);
+        if (response.ok) {
+            let donnees = await response.json(); // Format attendu : [{nom: "Nom", statut: "Absent/Présent", heure: "12:00"}]
+            if (Array.isArray(donnees)) {
+                BaseDonneesInvites = donnees;
+                sauvegarderLocalement();
+                MettreAJourAffichage();
+                alert("Mise à jour réussie depuis Google Sheets !");
+            }
+        } else {
+            alert("Erreur lors de la récupération des données.");
+        }
+    } catch (e) {
+        alert("Impossible de joindre le serveur n8n. Vérifiez votre connexion.");
+    }
+}
+
+// --- RECHERCHE ET FILTRES ---
+function filtrerInvites() {
+    let query = document.getElementById('search-input').value.toLowerCase();
+    let listeDiv = document.getElementById('liste-invites');
+    listeDiv.innerHTML = '';
+    
+    let invitesFiltres = BaseDonneesInvites.filter(g => g.nom.toLowerCase().includes(query));
+    
+    if(invitesFiltres.length === 0) {
+        listeDiv.innerHTML = '<p style="color:#bdc3c7; text-align:center; margin-top:20px;">Aucun invité trouvé.</p>';
+        return;
+    }
+    
+    invitesFiltres.forEach(guest => {
+        let badgeClass = guest.statut === 'Présent' ? 'present' : 'absent';
+        let detailHeure = guest.heure ? `Scanné à ${guest.heure}` : 'Non arrivé';
+        
+        listeDiv.innerHTML += `
+            <div class="guest-item">
+                <div class="guest-info">
+                    <strong>${guest.nom}</strong>
+                    <span class="guest-time">${detailHeure}</span>
+                </div>
+                <div>
+                    <span class="badge ${badgeClass}">${guest.statut}</span>
+                    ${guest.statut === 'Absent' ? `<button onclick="forcerValidation('${guest.nom}')" style="margin-left:8px; font-size:11px; padding:4px 6px; border-radius:5px; border:none; background:var(--primary); color:white; cursor:pointer;"><i class="fa-solid fa-check"></i></button>` : ''}
+                </div>
+            </div>
+        `;
+    });
+}
+
+function forcerValidation(nom) {
+    let invite = BaseDonneesInvites.find(g => g.nom === nom);
+    if (invite) validerEntree(invite);
+}
+
+// --- PARAMÈTRES ---
+function sauvegarderParametres() {
+    WebhookUrl = document.getElementById('webhook-url').value.trim();
+    localStorage.setItem('smartcheck_webhook', WebhookUrl);
+    alert("Paramètres enregistrés !");
+}
+
+async function testerConnexion() {
+    let url = document.getElementById('webhook-url').value.trim();
+    if(!url) return alert("Veuillez entrer une URL.");
+    try {
+        let res = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'ping'}) });
+        if(res.ok) alert("Connexion avec n8n établie avec succès ! 🚀");
+        else alert("Le serveur a répondu mais avec une erreur.");
+    } catch(e) {
+        alert("Échec de la connexion. Vérifiez l'URL ou l'état de votre workflow n8n.");
+    }
+}
+
+// --- UTILITAIRES ---
+function MettreAJourAffichage() {
+    let total = BaseDonneesInvites.length;
+    let presents = BaseDonneesInvites.filter(g => g.statut === 'Présent').length;
+    let absents = total - presents;
+    let ratio = total > 0 ? Math.round((presents / total) * 100) : 0;
+    
+    document.getElementById('stat-total').innerText = total;
+    document.getElementById('stat-present').innerText = presents;
+    document.getElementById('stat-absent').innerText = absents;
+    document.getElementById('stat-ratio').innerText = ratio + '%';
+    
+    filtrerInvites();
+}
 
 function declencherFlash(message, couleur) {
     let overlay = document.getElementById('scan-overlay');
@@ -268,54 +549,20 @@ function declencherFlash(message, couleur) {
     overlay.style.display = 'flex';
     
     if (navigator.vibrate) navigator.vibrate([200]);
-
-    setTimeout(() => {
-        overlay.style.display = 'none';
-    }, 2000);
+    setTimeout(() => overlay.style.display = 'none', 2500);
 }
 
-function MettreAJourAffichage() {
-    let listeDiv = document.getElementById('liste-invites');
-    let compteurDiv = document.getElementById('count-total');
-    
-    compteurDiv.innerText = invitesScannes.length;
-    
-    if (invitesScannes.length === 0) {
-        listeDiv.innerHTML = '<p style="color:#bdc3c7; text-align:center; margin-top:20px;">Aucun invité enregistré pour le moment.</p>';
-        return;
-    }
-    
-    listeDiv.innerHTML = '';
-    invitesScannes.forEach(guest => {
-        listeDiv.innerHTML += `
-            <div class="guest-item">
-                <div>
-                    <strong>${guest.nom}</strong><br>
-                    <span class="guest-time">Scanné à ${guest.heure}</span>
-                </div>
-                <span class="badge">Présent</span>
-            </div>
-        `;
-    });
+function sauvegarderLocalement() {
+    localStorage.setItem('smartcheck_db', JSON.stringify(BaseDonneesInvites));
 }
 
-function viderListe() {
-    if (confirm("Voulez-vous vraiment vider la liste des invités présents ?")) {
-        invitesScannes = [];
-        localStorage.removeItem('wedding_guests');
+function reinitialiserLocale() {
+    if (confirm("Voulez-vous vider la base locale ? (Nécessitera une nouvelle synchronisation)")) {
+        BaseDonneesInvites = [];
+        sauvegarderLocalement();
         MettreAJourAffichage();
     }
 }
-
-// ENREGISTREMENT DU SERVICE WORKER POUR LA PWA
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-            .then(reg => console.log('Service Worker PWA enregistré !', reg))
-            .catch(err => console.error('Erreur Service Worker :', err));
-    });
-}
 </script>
-
 </body>
-</html>
+    </html>
