@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SmartCheck by Smartech</title>
 
+<!-- CONFIGURATION PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2ec4b6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
 <!-- IMPORTATION DU SCANNEUR -->
 <script src="https://unpkg.com/html5-qrcode"></script>
 
@@ -185,7 +191,7 @@ button.btn-main:active {
     <div class="sub-title">Gestion des Entrées Mariage</div>
 </div>
 
-<!-- CARTE DU SNEUR -->
+<!-- CARTE DU SCANNEUR -->
 <div class="card">
     <div class="stats-grid">
         <div class="stat-box">
@@ -299,6 +305,15 @@ function viderListe() {
         localStorage.removeItem('wedding_guests');
         MettreAJourAffichage();
     }
+}
+
+// ENREGISTREMENT DU SERVICE WORKER POUR LA PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+            .then(reg => console.log('Service Worker PWA enregistré !', reg))
+            .catch(err => console.error('Erreur Service Worker :', err));
+    });
 }
 </script>
 
