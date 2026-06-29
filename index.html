@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -353,17 +352,14 @@ MettreAJourAffichage();
 
 // --- SYSTEME DE NAVIGATION ---
 function switchView(viewId, element) {
-    // Gestion des classes actives sur les vues
     document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
     document.getElementById(`view-${viewId}`).classList.add('active');
     
-    // Gestion des classes actives sur la navbar
     if(element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // Arrêt automatique de la caméra si on quitte le scanner
     if (viewId !== 'scanner' && html5QrcodeScanner) {
         html5QrcodeScanner.clear().catch(err => console.log(err));
         document.getElementById('start-btn').style.display = 'flex';
@@ -380,6 +376,22 @@ function demarrerScan() {
 function onScanSuccess(decodedText) {
     let nomInvite = decodedText.trim();
     
+    // Si le QR code contient l'URL avec un paramètre "name", on extrait uniquement le nom
+    if (nomInvite.includes('?name=') || nomInvite.includes('&name=')) {
+        try {
+            const urlObj = new URL(nomInvite);
+            const nameParam = urlObj.searchParams.get('name');
+            if (nameParam) {
+                nomInvite = decodeURIComponent(nameParam).trim();
+            }
+        } catch (e) {
+            const splitName = nomInvite.split('name=')[1];
+            if (splitName) {
+                nomInvite = decodeURIComponent(splitName.split('&')[0]).trim();
+            }
+        }
+    }
+    
     // Arrêt immédiat pour traitement informatique du scan actuel
     html5QrcodeScanner.clear().catch(err => console.log(err));
     
@@ -394,7 +406,6 @@ function onScanSuccess(decodedText) {
             validerEntree(invite);
         }
     } else {
-        // Optionnel : Si l'invité n'est pas trouvé dans la base importée
         let nouvelInvite = { nom: nomInvite, statut: 'Absent', heure: '' };
         validerEntree(nouvelInvite, true);
     }
@@ -407,7 +418,6 @@ async function validerEntree(invite, estNouveau = false) {
     let maintenant = new Date();
     let heureActuelle = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
     
-    // Mise à jour locale immédiate (Optimistic UI)
     if (estNouveau) {
         invite.statut = 'Présent';
         invite.heure = heureActuelle;
@@ -420,9 +430,8 @@ async function validerEntree(invite, estNouveau = false) {
     sauvegarderLocalement();
     MettreAJourAffichage();
     
-    declencherFlash('Accès Autorisé ✅<br><span style="font-size:18px;font-weight:normal;">' + invite.nom + '</span>', 'var(--success)');
+    declencherFlash('Accès Autorisé ✅<br><span style="font-size:22px; font-weight:bold; display:block; margin-top:10px;">Bienvenue ' + invite.nom + '</span>', 'var(--success)');
 
-    // Envoi asynchrone vers n8n (Google Sheets)
     if (WebhookUrl) {
         try {
             await fetch(WebhookUrl, {
@@ -456,7 +465,7 @@ async function synchroniserDonnees() {
     try {
         let response = await fetch(`${WebhookUrl}?action=getGuests`);
         if (response.ok) {
-            let donnees = await response.json(); // Format attendu : [{nom: "Nom", statut: "Absent/Présent", heure: "12:00"}]
+            let donnees = await response.json(); 
             if (Array.isArray(donnees)) {
                 BaseDonneesInvites = donnees;
                 sauvegarderLocalement();
@@ -565,4 +574,4 @@ function reinitialiserLocale() {
 }
 </script>
 </body>
-    </html>
+</html>
