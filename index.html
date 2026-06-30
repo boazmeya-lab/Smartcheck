@@ -1,70 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SmartCheck by Smartech</title>
+
+<!-- CONFIGURATION PWA -->
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#2ec4b6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<!-- IMPORTATION DU SCANNEUR ET DES ICONES -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+    --primary: #2ec4b6;
+    --primary-dark: #0f9f90;
+    --success: #2ecc71;
+    --danger: #e74c3c;
+    --warning: #f1c40f;
+    --dark: #2c3e50;
+    --bg: #f4f9f8;
+    --card-shadow: 0 4px 20px rgba(46, 196, 182, 0.08);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    padding: 15px 15px 80px 15px;
+    color: var(--dark);
+    -webkit-user-select: none;
+}
+
+.header-container {
+    margin-top: 15px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+h1 {
+    color: var(--dark);
+    font-size: 28px;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
+
+h1 span {
+    color: var(--primary);
+}
+
+.brand-subtitle {
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.app-view {
+    display: none;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.app-view.active {
+    display: block;
+}
+
+.card {
+    background: white;
+    padding: 20px;
+    margin: 15px auto;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    box-sizing: border-box;
+}
+
+.nav-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+    z-index: 999;
+}
+
+.nav-item {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: 600;
+    width: 25%;
+}
+
+.nav-item i {
+    font-size: 20px;
+    margin-bottom: 4px;
+}
+
+.nav-item.active {
+    color: var(--primary);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.stat-box {
+    background: #fff;
+    padding: 15px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    border-left: 4px solid var(--primary);
+}
+
+.stat-box.success { border-left-color: var(--success); }
+.stat-box.warning { border-left-color: var(--warning); }
+
+.stat-number {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--dark);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 5px;
+}
+
+.search-box, .input-field {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.search-box:focus, .input-field:focus {
+    border-color: var(--primary);
+}
+
+.guest-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.guest-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #f1f9f8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+}
+
+.guest-info strong {
+    display: block;
+    color: var(--dark);
+}
+
+.guest-time {
+    font-size: 11px;
+    color: #bdc3c7;
+}
+
+.guest-table-badge {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-top: 3px;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge.present { background: rgba(46, 204, 113, 0.15); color: var(--success); }
+.badge.absent { background: rgba(148, 163, 184, 0.15); color: #64748b; }
+
+button.btn-main {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(46, 196, 182, 0.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+button.btn-main:hover { background: var(--primary-dark); }
+button.btn-secondary {
+    background: #e2e8f0;
+    color: var(--dark);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#scan-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10000;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    padding: 20px;
+}
+
+.flash-title {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.flash-name {
+    font-size: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin: 15px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.flash-table {
+    font-size: 22px;
+    font-weight: 600;
+    background: #fff;
+    color: #1e293b;
+    padding: 6px 16px;
+    border-radius: 8px;
+    margin-top: 5px;
+}
+</style>
+</head>
+<body>
+
+<div class="header-container">
+    <div class="brand-subtitle">By Smartech</div>
+    <h1>Smart<span>Check</span></h1>
+</div>
+
+<!-- ACCUEIL -->
+<div id="view-home" class="app-view active">
+    <div class="card">
+        <h3><i class="fa-solid fa-chart-pie"></i> Tableau de bord</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div id="stat-total" class="stat-number">0</div>
+                <div class="stat-label">Total Invités</div>
+            </div>
+            <div class="stat-box success">
+                <div id="stat-present" class="stat-number">0</div>
+                <div class="stat-label">Présents</div>
+            </div>
+            <div class="stat-box warning">
+                <div id="stat-absent" class="stat-number">0</div>
+                <div class="stat-label">Absents</div>
+            </div>
+            <div class="stat-box">
+                <div id="stat-ratio" class="stat-number">0%</div>
+                <div class="stat-label">Taux d'accès</div>
+            </div>
+        </div>
+        <button class="btn-main" onclick="switchView('scanner')">
+            <i class="fa-solid fa-qrcode"></i> Lancer un Scan
+        </button>
+    </div>
+</div>
+
+<!-- SCANNER -->
+<div id="view-scanner" class="app-view">
+    <div class="card">
+        <button id="start-btn" class="btn-main" onclick="demarrerScan()">📷 Ouvrir le Scanneur</button>
+        <div id="reader"></div>
+    </div>
+</div>
+
+<!-- INVITÉS -->
+<div id="view-guests" class="app-view">
+    <div class="card">
+        <div style="display:flex; gap:10px; margin-bottom: 15px;">
+            <input type="text" id="search-input" class="search-box" placeholder="Rechercher un invité..." oninput="filtrerInvites()">
+            <button class="btn-secondary" onclick="synchroniserDonnees()"><i class="fa-solid fa-sync"></i></button>
+        </div>
+        <div id="liste-invites" class="guest-list"></div>
+    </div>
+</div>
+
+<!-- PARAMÈTRES -->
+<div id="view-settings" class="app-view">
+    <div class="card">
+        <h3><i class="fa-solid fa-gear"></i> Configuration webhook n8n</h3>
+        <p style="font-size:13px; color:#7f8c8d;">Entrez l'URL de votre Webhook n8n connecté à Google Sheets.</p>
+        <input type="url" id="webhook-url" class="input-field" placeholder="https://..." style="margin-bottom: 15px;">
+        
+        <button class="btn-main" onclick="sauvegarderParametres()" style="margin-bottom:10px;">
+            <i class="fa-solid fa-floppy-disk"></i> Sauvegarder la configuration
+        </button>
+        <button class="btn-secondary" onclick="testerConnexion()" style="width:100%;">
+            <i class="fa-solid fa-wifi"></i> Tester la connexion
+        </button>
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 20px 0;">
+        <button class="btn-secondary" onclick="reinitialiserLocale()" style="width:100%; color: var(--danger);">
+            <i class="fa-solid fa-trash-can"></i> Réinitialiser le cache local
+        </button>
+    </div>
+</div>
+
+<!-- NAV BAR -->
+<div class="nav-bar">
+    <button class="nav-item active" onclick="switchView('home', this)"><i class="fa-solid fa-house"></i>Accueil</button>
+    <button class="nav-item" onclick="switchView('scanner', this)"><i class="fa-solid fa-qrcode"></i>Scanner</button>
+    <button class="nav-item" onclick="switchView('guests', this)"><i class="fa-solid fa-users"></i>Invités</button>
+    <button class="nav-item" onclick="switchView('settings', this)"><i class="fa-solid fa-gear"></i>Paramètres</button>
+</div>
+
+<div id="scan-overlay"></div>
+
 <script>
 let html5QrcodeScanner;
 let BaseDonneesInvites = JSON.parse(localStorage.getItem('smartcheck_db')) || [];
 let WebhookUrl = localStorage.getItem('smartcheck_webhook') || '';
 
-// Initialisation au chargement
 document.getElementById('webhook-url').value = WebhookUrl;
 MettreAJourAffichage();
 
-// --- SYSTEME DE NAVIGATION ---
 function switchView(viewId, element) {
     document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
     document.getElementById(`view-${viewId}`).classList.add('active');
-    
     if(element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
     }
-
     if (viewId !== 'scanner' && html5QrcodeScanner) {
         html5QrcodeScanner.clear().catch(err => console.log(err));
         document.getElementById('start-btn').style.display = 'flex';
     }
 }
 
-// --- SCANNEUR ---
 function demarrerScan() {
     document.getElementById('start-btn').style.display = 'none';
     html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: { width: 250, height: 250 } }, false);
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 }
 
-// Fonction intelligente pour extraire le nom si le QR code est une URL
-function extraireNomDepuisCode(texte) {
+// Nettoie n'importe quelle chaîne si c'est une URL
+function extraireNomDepuisTexte(texte) {
+    if (!texte) return '';
     texte = texte.trim();
-    // Si le texte commence par http:// ou https://, c'est une URL
     if (texte.startsWith('http://') || texte.startsWith('https://')) {
         try {
             let url = new URL(texte);
-            // On cherche le paramètre 'name' ou 'nom' dans l'URL
             let nom = url.searchParams.get('name') || url.searchParams.get('nom');
-            if (nom) {
-                return decodeURIComponent(nom).trim();
-            }
+            if (nom) return decodeURIComponent(nom).trim();
         } catch (e) {
-            console.error("Erreur lors de la lecture de l'URL du QR code", e);
+            console.error(e);
         }
     }
-    return texte; // Si ce n'est pas une URL, on garde le texte brut
+    return texte;
 }
 
 function onScanSuccess(decodedText) {
-    // Extraction du nom (nettoie l'URL si nécessaire)
-    let nomInvite = extraireNomDepuisCode(decodedText);
-    
+    let nomScanne = extraireNomDepuisTexte(decodedText);
     html5QrcodeScanner.clear().catch(err => console.log(err));
     
-    let invite = BaseDonneesInvites.find(g => g.nom.toLowerCase() === nomInvite.toLowerCase());
+    // Recherche intelligente (compare uniquement les noms nettoyés)
+    let invite = BaseDonneesInvites.find(g => extraireNomDepuisTexte(g.nom).toLowerCase() === nomScanne.toLowerCase());
     
     if (invite) {
         if (invite.statut === 'Présent') {
             let detailHeure = invite.heure ? 'Présent depuis ' + invite.heure : '';
             let tableText = invite.table ? `<br><div class="flash-table">📍 ${invite.table}</div>` : '';
-            
             declencherFlash(
                 `<div class="flash-title">Déjà Scanné ! ⚠️</div>
-                 <div class="flash-name">${invite.nom}</div>
+                 <div class="flash-name">${extraireNomDepuisTexte(invite.nom)}</div>
                  <span style="font-size:16px;">${detailHeure}</span>
                  ${tableText}`, 
                 'var(--danger)'
@@ -74,36 +427,33 @@ function onScanSuccess(decodedText) {
             validerEntree(invite);
         }
     } else {
-        // Crée un nouvel invité propre sans l'URL barbare
-        let nouvelInvite = { nom: nomInvite, statut: 'Absent', heure: '', table: '' };
+        let nouvelInvite = { nom: nomScanne, statut: 'Absent', heure: '', table: '' };
         validerEntree(nouvelInvite, true);
     }
 }
 
 function onScanFailure(error) {}
 
-// --- INTERACTION WEBHOOK n8n & LOCAL ---
 async function validerEntree(invite, estNouveau = false) {
     let maintenant = new Date();
     let heureActuelle = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
     
+    invite.statut = 'Présent';
+    invite.heure = heureActuelle;
+
     if (estNouveau) {
-        invite.statut = 'Présent';
-        invite.heure = heureActuelle;
         BaseDonneesInvites.unshift(invite);
-    } else {
-        invite.statut = 'Présent';
-        invite.heure = heureActuelle;
     }
     
     sauvegarderLocalement();
     MettreAJourAffichage();
     
-    let tableHtml = invite.table ? `<div class="flash-table">📍 Numéro de Table : ${invite.table}</div>` : `<div class="flash-table">📍 Pas de table assignée</div>`;
+    let nomPropre = extraireNomDepuisTexte(invite.nom);
+    let tableHtml = invite.table ? `<div class="flash-table">📍 Table : ${invite.table}</div>` : `<div class="flash-table">📍 Pas de table assignée</div>`;
     
     declencherFlash(
         `<div class="flash-title">Accès Autorisé ✅</div>
-         <div class="flash-name">${invite.nom}</div>
+         <div class="flash-name">${nomPropre}</div>
          ${tableHtml}`, 
         'var(--success)'
     );
@@ -113,13 +463,12 @@ async function validerEntree(invite, estNouveau = false) {
             await fetch(WebhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'checkin', nom: invite.nom, heure: heureActuelle })
+                body: JSON.stringify({ action: 'checkin', nom: nomPropre, heure: heureActuelle })
             });
         } catch (e) {
-            console.error("Échec de synchronisation en ligne du scan, stocké localement.", e);
+            console.error("Erreur synchro", e);
         }
     }
-    
     relancerScanneurApresDelai();
 }
 
@@ -131,13 +480,11 @@ function relancerScanneurApresDelai() {
     }, 2500);
 }
 
-// --- SYNCHRONISATION COMPLETE DEPUIS GOOGLE SHEETS VIA n8n ---
 async function synchroniserDonnees() {
     if (!WebhookUrl) {
-        alert("Veuillez d'abord configurer l'URL de votre Webhook dans les Paramètres.");
+        alert("Configurez le Webhook.");
         return;
     }
-    
     try {
         let response = await fetch(`${WebhookUrl}?action=getGuests`);
         if (response.ok) {
@@ -146,26 +493,25 @@ async function synchroniserDonnees() {
                 BaseDonneesInvites = donnees;
                 sauvegarderLocalement();
                 MettreAJourAffichage();
-                alert("Mise à jour réussie depuis Google Sheets !");
+                alert("Synchronisé !");
             }
         } else {
-            alert("Erreur lors de la récupération des données.");
+            alert("Erreur de récupération.");
         }
     } catch (e) {
-        alert("Impossible de joindre le serveur n8n. Vérifiez votre connexion.");
+        alert("Erreur serveur n8n.");
     }
 }
 
-// --- RECHERCHE ET FILTRES ---
 function filtrerInvites() {
     let query = document.getElementById('search-input').value.toLowerCase();
     let listeDiv = document.getElementById('liste-invites');
     listeDiv.innerHTML = '';
     
-    let invitesFiltres = BaseDonneesInvites.filter(g => g.nom.toLowerCase().includes(query));
+    let invitesFiltres = BaseDonneesInvites.filter(g => extraireNomDepuisTexte(g.nom).toLowerCase().includes(query));
     
     if(invitesFiltres.length === 0) {
-        listeDiv.innerHTML = '<p style="color:#bdc3c7; text-align:center; margin-top:20px;">Aucun invité trouvé.</p>';
+        listeDiv.innerHTML = '<p style="color:#bdc3c7; text-align:center; margin-top:20px;">Aucun invité.</p>';
         return;
     }
     
@@ -173,11 +519,12 @@ function filtrerInvites() {
         let badgeClass = guest.statut === 'Présent' ? 'present' : 'absent';
         let detailHeure = guest.heure ? `Scanné à ${guest.heure}` : 'Non arrivé';
         let tableBadge = guest.table ? `<div class="guest-table-badge"><i class="fa-solid fa-chair"></i> ${guest.table}</div>` : '';
+        let nomPropre = extraireNomDepuisTexte(guest.nom);
         
         listeDiv.innerHTML += `
             <div class="guest-item">
                 <div class="guest-info">
-                    <strong>${guest.nom}</strong>
+                    <strong>${nomPropre}</strong>
                     <span class="guest-time">${detailHeure}</span>
                     ${tableBadge}
                 </div>
@@ -195,26 +542,24 @@ function forcerValidation(nom) {
     if (invite) validerEntree(invite);
 }
 
-// --- PARAMÈTRES ---
 function sauvegarderParametres() {
     WebhookUrl = document.getElementById('webhook-url').value.trim();
     localStorage.setItem('smartcheck_webhook', WebhookUrl);
-    alert("Paramètres enregistrés !");
+    alert("Enregistré !");
 }
 
 async function testerConnexion() {
     let url = document.getElementById('webhook-url').value.trim();
-    if(!url) return alert("Veuillez entrer une URL.");
+    if(!url) return alert("Entrez une URL.");
     try {
         let res = await fetch(url, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({action:'ping'}) });
-        if(res.ok) alert("Connexion avec n8n établie avec succès ! 🚀");
-        else alert("Le serveur a répondu mais avec une erreur.");
+        if(res.ok) alert("Connecté à n8n ! 🚀");
+        else alert("Réponse avec erreur.");
     } catch(e) {
-        alert("Échec de la connexion. Vérifiez l'URL ou l'état de votre workflow n8n.");
+        alert("Échec connexion.");
     }
 }
 
-// --- UTILITAIRES ---
 function MettreAJourAffichage() {
     let total = BaseDonneesInvites.length;
     let presents = BaseDonneesInvites.filter(g => g.statut === 'Présent').length;
@@ -244,10 +589,12 @@ function sauvegarderLocalement() {
 }
 
 function reinitialiserLocale() {
-    if (confirm("Voulez-vous vider la base locale ? (Nécessitera une nouvelle synchronisation)")) {
+    if (confirm("Vider le cache ?")) {
         BaseDonneesInvites = [];
         sauvegarderLocalement();
         MettreAJourAffichage();
     }
 }
 </script>
+</body>
+</html>
