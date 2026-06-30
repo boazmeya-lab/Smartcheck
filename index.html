@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -195,6 +195,17 @@ h1 span {
     color: #bdc3c7;
 }
 
+.guest-table-badge {
+    display: inline-block;
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    margin-top: 3px;
+}
+
 /* Badges */
 .badge {
     padding: 4px 8px;
@@ -241,6 +252,7 @@ button.btn-secondary {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 10000;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     color: white;
@@ -248,6 +260,30 @@ button.btn-secondary {
     font-weight: bold;
     text-align: center;
     padding: 20px;
+}
+
+.flash-title {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.flash-name {
+    font-size: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 10px 20px;
+    border-radius: 12px;
+    margin: 15px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.flash-table {
+    font-size: 22px;
+    font-weight: 600;
+    background: #fff;
+    color: #1e293b;
+    padding: 6px 16px;
+    border-radius: 8px;
+    margin-top: 5px;
 }
 </style>
 </head>
@@ -262,7 +298,7 @@ button.btn-secondary {
 <!-- ================= VUE : ACCUEIL ================= -->
 <div id="view-home" class="app-view active">
     <div class="card">
-        <h3><i class="fa-solid to fa-chart-pie"></i> Tableau de bord</h3>
+        <h3><i class="fa-solid fa-chart-pie"></i> Tableau de bord</h3>
         <div class="stats-grid">
             <div class="stat-box">
                 <div id="stat-total" class="stat-number">0</div>
@@ -353,17 +389,14 @@ MettreAJourAffichage();
 
 // --- SYSTEME DE NAVIGATION ---
 function switchView(viewId, element) {
-    // Gestion des classes actives sur les vues
     document.querySelectorAll('.app-view').forEach(view => view.classList.remove('active'));
     document.getElementById(`view-${viewId}`).classList.add('active');
     
-    // Gestion des classes actives sur la navbar
     if(element) {
         document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
         element.classList.add('active');
     }
 
-    // Arrêt automatique de la caméra si on quitte le scanner
     if (viewId !== 'scanner' && html5QrcodeScanner) {
         html5QrcodeScanner.clear().catch(err => console.log(err));
         document.getElementById('start-btn').style.display = 'flex';
@@ -380,22 +413,28 @@ function demarrerScan() {
 function onScanSuccess(decodedText) {
     let nomInvite = decodedText.trim();
     
-    // Arrêt immédiat pour traitement informatique du scan actuel
     html5QrcodeScanner.clear().catch(err => console.log(err));
     
-    // Recherche de l'invité localement
     let invite = BaseDonneesInvites.find(g => g.nom.toLowerCase() === nomInvite.toLowerCase());
     
     if (invite) {
         if (invite.statut === 'Présent') {
-            declencherFlash('Déjà Scanné ! ⚠️<br><span style="font-size:16px;">Présent depuis '+invite.heure+'</span>', 'var(--danger)');
+            let detailHeure = invite.heure ? 'Présent depuis ' + invite.heure : '';
+            let tableText = invite.table ? `<br><div class="flash-table">📍 ${invite.table}</div>` : '';
+            
+            declencherFlash(
+                `<div class="flash-title">Déjà Scanné ! ⚠️</div>
+                 <div class="flash-name">${invite.nom}</div>
+                 <span style="font-size:16px;">${detailHeure}</span>
+                 ${tableText}`, 
+                'var(--danger)'
+            );
             relancerScanneurApresDelai();
         } else {
             validerEntree(invite);
         }
     } else {
-        // Optionnel : Si l'invité n'est pas trouvé dans la base importée
-        let nouvelInvite = { nom: nomInvite, statut: 'Absent', heure: '' };
+        let nouvelInvite = { nom: nomInvite, statut: 'Absent', heure: '', table: '' };
         validerEntree(nouvelInvite, true);
     }
 }
@@ -407,7 +446,6 @@ async function validerEntree(invite, estNouveau = false) {
     let maintenant = new Date();
     let heureActuelle = maintenant.getHours().toString().padStart(2, '0') + ':' + maintenant.getMinutes().toString().padStart(2, '0');
     
-    // Mise à jour locale immédiate (Optimistic UI)
     if (estNouveau) {
         invite.statut = 'Présent';
         invite.heure = heureActuelle;
@@ -420,9 +458,16 @@ async function validerEntree(invite, estNouveau = false) {
     sauvegarderLocalement();
     MettreAJourAffichage();
     
-    declencherFlash('Accès Autorisé ✅<br><span style="font-size:18px;font-weight:normal;">' + invite.nom + '</span>', 'var(--success)');
+    // Génération du contenu textuel de validation avec Nom et Numéro de Table
+    let tableHtml = invite.table ? `<div class="flash-table">📍 Numéro de Table : ${invite.table}</div>` : `<div class="flash-table">📍 Pas de table assignée</div>`;
+    
+    declencherFlash(
+        `<div class="flash-title">Accès Autorisé ✅</div>
+         <div class="flash-name">${invite.nom}</div>
+         ${tableHtml}`, 
+        'var(--success)'
+    );
 
-    // Envoi asynchrone vers n8n (Google Sheets)
     if (WebhookUrl) {
         try {
             await fetch(WebhookUrl, {
@@ -456,7 +501,8 @@ async function synchroniserDonnees() {
     try {
         let response = await fetch(`${WebhookUrl}?action=getGuests`);
         if (response.ok) {
-            let donnees = await response.json(); // Format attendu : [{nom: "Nom", statut: "Absent/Présent", heure: "12:00"}]
+            let donnees = await response.json(); 
+            // Format attendu désormais : [{nom: "Nom", statut: "Absent", heure: "", table: "Table 4"}]
             if (Array.isArray(donnees)) {
                 BaseDonneesInvites = donnees;
                 sauvegarderLocalement();
@@ -487,12 +533,14 @@ function filtrerInvites() {
     invitesFiltres.forEach(guest => {
         let badgeClass = guest.statut === 'Présent' ? 'present' : 'absent';
         let detailHeure = guest.heure ? `Scanné à ${guest.heure}` : 'Non arrivé';
+        let tableBadge = guest.table ? `<div class="guest-table-badge"><i class="fa-solid fa-chair"></i> ${guest.table}</div>` : '';
         
         listeDiv.innerHTML += `
             <div class="guest-item">
                 <div class="guest-info">
                     <strong>${guest.nom}</strong>
                     <span class="guest-time">${detailHeure}</span>
+                    ${tableBadge}
                 </div>
                 <div>
                     <span class="badge ${badgeClass}">${guest.statut}</span>
@@ -565,5 +613,5 @@ function reinitialiserLocale() {
 }
 </script>
 </body>
-</html>
-        
+    </html>
+                    
