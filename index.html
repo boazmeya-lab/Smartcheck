@@ -405,21 +405,26 @@ function extraireNomDepuisTexte(texte) {
 }
 
 function onScanSuccess(decodedText) {
-    let idScanne = "";
+    let texteNettoye = "";
     
     try {
-        // On essaie de lire le QR code comme un objet JSON contenant l'ID
+        // 1. Si le QR code est au format JSON (futur système par ID)
         const donnees = JSON.parse(decodedText);
-        idScanne = donnees.id;
+        texteNettoye = donnees.id;
     } catch (e) {
-        // Si le QR code n'est pas du JSON, on prend le texte brut (ancienne méthode)
-        idScanne = decodedText.trim();
+        // 2. Si c'est un lien URL (système actuel visible sur image_4.png)
+        // On extrait proprement le nom qui est après "?name="
+        texteNettoye = extraireNomDepuisTexte(decodedText).trim();
     }
 
     html5QrcodeScanner.clear().catch(err => console.log(err));
 
-    // CORRECTION HOMONYME : Recherche par ID unique
-    let invite = BaseDonneesInvites.find(g => g.id === idScanne);
+    // On cherche l'invité dans la base de données
+    // On compare soit avec l'ID, soit avec le nom nettoyé pour que les deux systèmes fonctionnent !
+    let invite = BaseDonneesInvites.find(g => 
+        (g.id === texteNettoye) || 
+        (g.nom && g.nom.toLowerCase() === texteNettoye.toLowerCase())
+    );
     
     if (invite) {
         if (invite.statut === 'Présent') {
@@ -438,6 +443,13 @@ function onScanSuccess(decodedText) {
             validerEntree(invite);
         }
     } else {
+        // CORRECTION VISUELLE : Si l'invité n'est vraiment pas dans la liste,
+        // on affiche uniquement son nom extrait de l'URL, plus toute l'adresse internet !
+        let nomAffichage = texteNettoye.startsWith('http') ? "Inconnu" : texteNettoye;
+        let nouvelInvite = { nom: nomAffichage, statut: 'Absent', heure: '', table: '' };
+        validerEntree(nouvelInvite, true);
+    }
+                }
         // CORRECTION ICI : Si l'invité est inconnu, on affiche l'ID scanné à la place du nom manquant
         let nouvelInvite = { nom: "Inconnu (" + idScanne + ")", statut: 'Absent', heure: '', table: '' };
         validerEntree(nouvelInvite, true);
